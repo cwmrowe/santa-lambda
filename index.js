@@ -35,10 +35,12 @@ var getImage = function(){
 }
 
 var convertImage = function(imageBody){
-    console.log('Start Save Image');
+    console.log('Convert Image');
 
     gm(imageBody)
-        .resize(200, 200)
+        .composite('santahat.png')
+        .geometry('+100+150')
+        //.resize(200, 200)
         .toBuffer(function(err, buffer){
             if (err){
             context.fail("GM FAIL");
@@ -59,6 +61,7 @@ var convertImage = function(imageBody){
 }
 
 var saveImage = function(imageBody){
+    console.log('Save Image');
 
     var filename = key.substr(sourceDir.length, key.length - sourceDir.length);
     var location = transformedDir + filename;
