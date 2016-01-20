@@ -36,26 +36,28 @@ var getImage = function(){
 }
 
 var addHat = function(imageBuffer, face){
+
+    var hatSize = face.width * 1.3;
+
+    var y = face.y + (face.height * 0.2) - hatSize;
+    if(y < 0){
+        y = y.toString();
+    }else{
+        y = '+' + y;
+    }
+    var x = face.x - (face.width * 0.15);
+    if(x < 0){
+        x = x.toString();
+    }else{
+        x = '+' + x;
+    }
+
+    var geometry = hatSize + 'x' + hatSize + x + y;
+
+    console.log('geometry: ', geometry);
+
     return new Promise(function (resolve, reject) {
-      
-        var hatSize = face.width * 1.3;
-
-        var y = face.y + (face.height * 0.2) - hatSize;
-        if(y < 0){
-            y = y.toString();
-        }else{
-            y = '+' + y;
-        }
-        var x = face.x - (face.width * 0.15);
-        if(x < 0){
-            x = x.toString();
-        }else{
-            x = '+' + x;
-        }
-
-        var geometry = hatSize + 'x' + hatSize + x + y;
-
-        console.log('geometry: ', geometry);
+        
 
         gm(imageBuffer)
         //.resize(200, 200)
@@ -69,38 +71,6 @@ var addHat = function(imageBuffer, face){
             resolve(buffer);
           }
         });
-
-
-        // gm('santahat.png')
-        //     .resize(hatSize, hatSize)
-        //     .write('temphat.png', function(err){
-        //         if (err){
-        //             context.fail("HAT RESIZE FAIL DETECT");
-        //         }else{
-
-                    // var y = face.y - hatSize;
-                    // if(y < 0){
-                    //     y = y.toString();
-                    // }else{
-                    //     y = '+' + y;
-                    // }
-
-                    // var geometry = '+' + face.x + y;
-
-        //             gm(imageBuffer)
-        //             //.resize(200, 200)
-        //             .composite('temphat.png')
-        //             .geometry(geometry)
-        //             .toBuffer(function(err, buffer){
-        //               if (err){
-        //                 console.log('Add santa hat fail', err);
-        //                 reject(err);
-        //               }else{
-        //                 resolve(buffer);
-        //               }
-        //             });
-        //         }
-        //     })
 
 
     });
@@ -120,58 +90,31 @@ var convertImage = function(imageBody){
             context.fail("CV FAIL DETECT");
         }
 
-        // for (var i = 0; i < faces.length; i++){
-        //   var face = faces[i];
-        //   im.ellipse(face.x + face.width / 2, face.y + face.height / 2, face.width / 2, face.height / 2);
-        // }
-
         console.log('Faces found: ', faces.length);
 
-        var face = faces[0];
+        var lastPromise;
 
-        addHat(imageBody, face).then(function(imageBuffer){
+        faces.forEach(function(face){
+
+            if(lastPromise){
+                lastPromise = lastPromise.then(function(imageBuffer){
+                    return addHat(imageBuffer, face);
+                });
+            }else{
+                lastPromise = addHat(imageBody, face);
+            }
+
+        });
+
+        lastPromise.then(function(imageBuffer){
+            console.log('last promise done');
             saveImage(imageBuffer);
         }, function(err){
             context.fail("ADD HAT FAIL");
-        })
-
-        // var geometry = '+' + face.x + '+' + face.y;
-        // console.log('geometry: ', geometry);
-
-        // gm(imageBody)
-        // .composite('santahat.png')
-        // .geometry('+' + face.x + '+' + face.y)
-        // //.resize(200, 200)
-        // .toBuffer(function(err, buffer){
-        //     if (err){
-        //     context.fail("GM FAIL");
-        //   }else{
-        //     saveImage(buffer);
-        //   }
-        // });
+        });
 
       });
     });
-
-    // gm(imageBody)
-    //     .composite('santahat.png')
-    //     .geometry('+100+150')
-    //     //.resize(200, 200)
-    //     .toBuffer(function(err, buffer){
-    //         if (err){
-    //         context.fail("GM FAIL");
-    //       }else{
-    //         saveImage(buffer);
-    //       }
-    //     });
-
-    // readFile('santahat.png').then(function(fileContents){
-    //     console.log('santa hat loaded');
-        
-
-    // }, function(err){
-    //     console.log(err);
-    // });
     
     
 }
